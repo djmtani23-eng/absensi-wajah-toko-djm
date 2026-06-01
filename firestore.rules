@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net - Default Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Help check document ID formatting
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Helper to validate entire object structure
+    function isValidAttendance(data) {
+      return data.keys().hasAll(['id', 'employeeName', 'type', 'photo', 'timestamp', 'location'])
+        && data.keys().size() == 6
+        && data.id is string
+        && data.id.size() <= 128
+        && data.employeeName is string
+        && data.employeeName.size() > 0
+        && data.employeeName.size() <= 150
+        && data.type is string
+        && (data.type == 'datang' || data.type == 'pulang')
+        && data.photo is string
+        && data.photo.size() > 0
+        && data.photo.size() <= 1200000
+        && data.timestamp is string
+        && data.timestamp.size() > 0
+        && data.timestamp.size() <= 50
+        && data.location is map
+        && data.location.keys().hasAll(['lat', 'lng'])
+        && data.location.keys().size() <= 3
+        && (data.location.lat is float || data.location.lat is int)
+        && (data.location.lng is float || data.location.lng is int)
+        && (!data.location.keys().hasAny(['address']) || data.location.address is string);
+    }
+
+    match /attendance/{recordId} {
+      // Validate single target operations
+      allow create: if isValidId(recordId) 
+        && recordId == request.resource.data.id
+        && isValidAttendance(request.resource.data);
+      
+      // Anyone can read entries for global historical overview / admin panel / local device lookups
+      allow read: if true;
+      
+      // STRICT IMMUTABILITY: No edits or deletions are ever allowed to guarantee audit integrity
+      allow update, delete: if false;
+    }
+  }
+}

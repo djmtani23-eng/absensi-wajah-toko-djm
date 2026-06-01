@@ -1,0 +1,55 @@
+{
+  "entities": {
+    "AttendanceRecord": {
+      "title": "AttendanceRecord",
+      "description": "An individual employee attendance entry containing selfie, GPS, and timestamp.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the record"
+        },
+        "employeeName": {
+          "type": "string",
+          "description": "The full name of the employee entered manually"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["datang", "pulang"],
+          "description": "The session type: arrival or departure"
+        },
+        "photo": {
+          "type": "string",
+          "description": "Base64 string representing the captured selfie webcam photo"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time of the attendance in ISO format"
+        },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": {
+              "type": "number"
+            },
+            "lng": {
+              "type": "number"
+            },
+            "address": {
+              "type": "string"
+            }
+          },
+          "required": ["lat", "lng"]
+        }
+      },
+      "required": ["id", "employeeName", "type", "photo", "timestamp", "location"]
+    }
+  },
+  "firestore": {
+    "attendance": {
+      "schema": "AttendanceRecord",
+      "description": "Collection of all employee attendance submissions"
+    }
+  }
+}
