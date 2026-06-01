@@ -1,8 +1,0 @@
-{
-  "name": "Absensi Wajah Toko DJM",
-  "description": "Aplikasi absensi karyawan dengan verifikasi foto selfie dan lokasi GPS.",
-  "requestFramePermissions": [
-    "camera",
-    "geolocation"
-  ]
-}
