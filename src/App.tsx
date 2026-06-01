@@ -78,9 +78,37 @@ export default function App() {
   const capturePhoto = useCallback(() => {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
-      setPhoto(imageSrc);
-      setStep('location');
-      fetchLocation();
+      // Compress the image using canvas to ensure small file size (under 100KB)
+      // to comply with Firestore's 1MB document size limit and rules constraints.
+      const img = new Image();
+      img.src = imageSrc;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const targetWidth = 480;
+        const targetHeight = 640;
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+          try {
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            setPhoto(compressedDataUrl);
+          } catch (e) {
+            console.warn('Canvas conversion failed, falling back to original high-res image', e);
+            setPhoto(imageSrc);
+          }
+        } else {
+          setPhoto(imageSrc);
+        }
+        setStep('location');
+        fetchLocation();
+      };
+      img.onerror = () => {
+        setPhoto(imageSrc);
+        setStep('location');
+        fetchLocation();
+      };
     } else {
       setError('Gagal mengambil foto. Pastikan kamera aktif.');
     }
